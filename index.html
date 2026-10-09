@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsApp 收费前后支出变化分析（9.18–10.8）</title>
+<style>
+  :root{
+    --bg:#f6f7f9;--card:#fff;--ink:#1a1d21;--ink-2:#5a6169;--ink-3:#8b929a;
+    --line:#e6e8ec;--red:#d93025;--green:#1e8e3e;--blue:#1a73e8;--blue-soft:#e8f0fe;
+    --amber:#e37400;--amber-soft:#fef0dc;--green-soft:#e6f4ea;--red-soft:#fce8e6;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;padding-bottom:48px}
+  .wrap{max-width:960px;margin:0 auto;padding:0 22px}
+  header{background:linear-gradient(135deg,#1a2332 0%,#2d3e56 100%);color:#fff;padding:38px 0 34px;margin-bottom:24px}
+  header h1{font-size:26px;font-weight:700}
+  header p.sub{margin-top:10px;color:#aab6c8;font-size:13.5px}
+  h2{font-size:17px;font-weight:700;display:flex;align-items:center;gap:9px;margin:26px 0 14px}
+  h2::before{content:"";width:4px;height:17px;border-radius:2px;background:var(--blue)}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:0 1px 2px rgba(16,24,40,.03)}
+  .grid{display:grid;gap:14px}
+  .grid-3{grid-template-columns:repeat(3,1fr)}
+  .grid-2{grid-template-columns:repeat(2,1fr)}
+
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+  .kpi .label{font-size:12px;color:var(--ink-3);margin-bottom:7px}
+  .kpi .value{font-size:24px;font-weight:700}
+  .kpi .delta{font-size:12px;margin-top:6px;font-weight:600}
+  .up{color:var(--red)}.down{color:var(--green)}.flat{color:var(--ink-3)}
+
+  .verdict{border-left:4px solid var(--blue);background:var(--card);border-radius:var(--radius);padding:18px 20px;box-shadow:0 1px 2px rgba(16,24,40,.03)}
+  .verdict .big{font-size:15.5px;font-weight:600;line-height:1.55}
+  .verdict .hl{background:var(--amber-soft);padding:1px 6px;border-radius:5px;font-weight:700;color:var(--amber)}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  thead th{background:#f0f2f5;color:var(--ink-2);font-weight:600;font-size:12px}
+  tbody tr:last-child td{border-bottom:none}
+  td.num{font-variant-numeric:tabular-nums}
+  .pill{font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:20px}
+  .pill-red{background:var(--red-soft);color:var(--red)}
+  .pill-gray{background:#eef0f3;color:var(--ink-2)}
+
+  .chart-box{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+  .chart-title{font-size:13.5px;font-weight:600}
+  .chart-note{font-size:11.5px;color:var(--ink-3);margin:2px 0 12px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;font-size:11.5px;color:var(--ink-2)}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:5px}
+  .legend .ln{display:inline-block;width:18px;height:2px;vertical-align:3px;margin-right:5px}
+  .chart-wrap{width:100%;height:240px}
+  .chart-wrap svg{display:block;width:100%;height:100%}
+
+  .point{font-size:13px;color:var(--ink-2)}
+  .point strong{color:var(--ink)}
+  .point+.point{margin-top:10px}
+  .mark{background:var(--blue-soft);color:var(--blue);padding:1px 5px;border-radius:4px;font-weight:600}
+
+  ul.clean{list-style:none}
+  ul.clean li{position:relative;padding-left:18px;margin-bottom:8px;font-size:13px;color:var(--ink-2)}
+  ul.clean li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:50%;background:var(--blue)}
+  ul.clean li strong{color:var(--ink)}
+  .rec{background:var(--blue-soft);border-color:#c9daf8}
+
+  footer{margin-top:32px;text-align:center;font-size:11.5px;color:var(--ink-3)}
+
+  @media (max-width:780px){
+    .grid-3,.grid-2{grid-template-columns:1fr}
+    header h1{font-size:21px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>WhatsApp 收费前后支出变化分析</h1>
+    <p class="sub">区间：2026-09-18 ~ 2026-10-08 ｜ 10.1 起 WA 服务开始收费 ｜ 9.22 停止向未付费用户引流进 WA</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <h2>一、核心结论</h2>
+    <div class="verdict">
+      <p class="big">10.1 WhatsApp 服务开始收费，三周支出从 <b>$3,407</b> 涨至 <b>$4,010</b>，涨幅 <span class="hl">+17.7%</span>，<b>未出现预期中的暴涨</b>。主因是 9.22 已提前停止未付费用户向 WA 引流，压低了服务类消息基数，对冲了收费影响。周末支出高峰则是我方 API/营销通知集中在周六发送造成的，属于主动运营策略，不是自然流量高峰。</p>
+    </div>
+    <div class="grid grid-3" style="margin-top:14px">
+      <div class="kpi">
+        <div class="label">第三周支出</div>
+        <div class="value">$4,009.63</div>
+        <div class="delta up">▲ +17.7%</div>
+      </div>
+      <div class="kpi">
+        <div class="label">用户主动消息量</div>
+        <div class="value">194k → 39.6k</div>
+        <div class="delta down">▼ 9.22 后大降</div>
+      </div>
+      <div class="kpi">
+        <div class="label">通知量（含服务类）</div>
+        <div class="value">316k → 305k</div>
+        <div class="delta down">▼ -3.8%</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>二、趋势</h2>
+
+    <div class="chart-box" style="margin-bottom:14px">
+      <div class="chart-title">1. 每日支出与 WA 消息量走势</div>
+      <div class="chart-note">橙色柱为周六（我方通知发送高峰日）。蓝色折线为 WA 消息量（用户主动发给我方的消息）。</div>
+      <div class="legend">
+        <span><i style="background:#1a73e8;opacity:.82"></i>每日支出 (USD)</span>
+        <span><i style="background:#e37400"></i>周六支出</span>
+        <span><span class="ln" style="background:#e37400"></span>WA 消息量</span>
+      </div>
+      <div class="chart-wrap" id="mainChart"></div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="chart-box">
+        <div class="chart-title">2. 通知单条成本</div>
+        <div class="chart-note">10.1 后单价明显抬升，但涨幅被提前削减的服务量所吸收。</div>
+        <div class="chart-wrap" id="unitChart"></div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">3. 通知量 / 呼入量 / MM Lite 走势</div>
+        <div class="chart-note">9.23 起通知量与呼入量明显回落，MM Lite 仅在周六发送且量级很小。</div>
+        <div class="legend">
+          <span><span class="ln" style="background:#1a73e8"></span>通知量</span>
+          <span><span class="ln" style="background:#1e8e3e"></span>呼入量</span>
+          <span><span class="ln" style="background:#9334e6"></span>MM Lite</span>
+        </div>
+        <div class="chart-wrap" id="inboundChart"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;font-size:12px;color:var(--ink-2);line-height:1.7">
+      <strong style="color:var(--ink)">指标说明：</strong><br>
+      <b>通知量</b>：用户绑定时 WhatsApp 自动回复的服务消息 + 我方通过 API 主动发给用户的消息（含服务类通知、营销触达等）。<br>
+      <b>呼入量</b>：用户主动发消息进入 WA 会话的总条数（不限内容，多轮对话按条数累计）。<br>
+      <b>MM Lite</b>：使用 WhatsApp 营销模板（Marketing Message Lite）批量发送给用户的营销类消息，目前仅在周六发送。
+    </div>
+  </section>
+
+  <section>
+    <h2>三、周度数据</h2>
+    <div class="card" style="padding:4px 0;overflow-x:auto">
+      <table>
+        <thead>
+          <tr><th>周期</th><th>支出 (USD)</th><th>通知量</th><th>消息量</th><th>呼入量</th><th>MM Lite</th><th>支出环比</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>9.18–9.24</td><td class="num">3,407.23</td><td class="num">316,716</td><td class="num">194,404</td><td class="num">208,162</td><td class="num">1,312</td><td><span class="pill pill-gray">基准</span></td></tr>
+          <tr><td>9.25–10.1</td><td class="num">3,549.83</td><td class="num">324,336</td><td class="num">25,151</td><td class="num">56,796</td><td class="num">1,556</td><td><span class="pill pill-red">+4.2%</span></td></tr>
+          <tr><td>10.2–10.8</td><td class="num">4,009.63</td><td class="num">304,731</td><td class="num">39,629</td><td class="num">53,326</td><td class="num">1,617</td><td><span class="pill pill-red">+13.0%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>四、分析解释</h2>
+    <div class="card">
+      <div class="point"><strong>1. 9.22 提前削减了服务类成本基数</strong><br>
+      停止未付费用户向 WA 引流后，绑定场景相关的服务类消息减少。数据上，用户主动消息从 19.4 万降至 3.96 万，呼入从 20.8 万降至 5.3 万；通知量也从 31.7 万略降至 30.5 万。由于 10.1 收费前已把这部分用户“截流”在 WA 之外，因此收费后的账单没有出现预期中的大幅跳涨。</div>
+      <div class="point"><strong>2. 支出涨幅 = 单价上涨 + 基数提前被压低的综合结果</strong><br>
+      通知单条成本从 $0.0108 升至 $0.0132，涨幅约 22%。若通知量仍维持第一周 31.6 万的水平，第三周支出会更高；实际因服务类用户基数被压低，通知量回落至 30.5 万，<span class="mark">部分对冲了涨价</span>。</div>
+      <div class="point"><strong>3. 周末高峰是主动发送策略，不是自然流量</strong><br>
+      9.19、9.26、10.3 三个周六均出现通知量与支出双高峰，周六单日支出可达平日的 5–6 倍。结合 9.22 后用户主动交互已大幅减少，可以判断高峰来自我方 API/营销通知在周末集中发送，而非用户自然活跃。</div>
+      <div class="point"><strong>4. MM Lite 不是主要变量</strong><br>
+      三周 MM Lite 发送量仅 1,312 → 1,556 → 1,617，占通知量 0.5% 左右，且增长温和，对总支出的影响可忽略。</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>五、建议</h2>
+    <div class="card rec">
+      <ul class="clean">
+        <li><strong>周末是成本大头</strong>：评估周六集中发送的必要性，考虑把部分非紧急通知平摊到工作日或改为 Push/Telegram。</li>
+        <li><strong>持续监控“未付费用户”引流效率</strong>：9.22 的截流有效压低了服务基数，应量化该策略对后续付费转化的影响，避免误伤潜在付费用户。</li>
+        <li><strong>建立单条成本日报</strong>：按日跟踪通知单条成本，一旦继续上行可快速定位是 WA 调价还是国家/消息类型结构变化。</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>数据来源：WhatsApp 后台账单明细 ｜ 生成日期：2026-10-09 ｜ 本报告为单文件 HTML，可直接分享</footer>
+</div>
+
+<script>
+(function(){
+  const labels = ["9.18","9.19","9.20","9.21","9.22","9.23","9.24","9.25","9.26","9.27","9.28","9.29","9.30","10.1","10.2","10.3","10.4","10.5","10.6","10.7","10.8"];
+  const fullDate = ["09-18","09-19","09-20","09-21","09-22","09-23","09-24","09-25","09-26","09-27","09-28","09-29","09-30","10-01","10-02","10-03","10-04","10-05","10-06","10-07","10-08"];
+  const cost   = [563.8091,1529.294,266.4065,287.5106,253.1167,253.0248,254.2691,572.4319,1646.6762,264.2901,290.5481,246.1629,234.5387,256.1776,651.2744,1832.5414,309.0415,340.0737,293.9225,285.1911,297.5824];
+  const notify = [55359,139929,25272,24480,23750,23858,24068,56878,151313,25092,24058,22939,22018,22038,54617,148963,20210,20039,20024,20024,20854];
+  const msg    = [36089,37759,40068,41396,28651,5275,5166,5055,4204,3551,5350,3093,0,3898,5440,6227,6669,6238,5636,4561,4858];
+  const inbound= [38064,38619,42073,43374,31041,7527,7464,7436,6942,5646,7469,9346,12274,7683,7408,9256,8321,8377,7281,6400,6283];
+  const mmlite = [0,723,0,589,0,0,0,0,845,0,711,0,0,0,0,898,0,719,0,0,0];
+  const unit   = cost.map((c,i)=> notify[i] ? +(c/notify[i]).toFixed(5) : 0);
+  const isSat  = [false,true,false,false,false,false,false,false,true,false,false,false,false,false,false,true,false,false,false,false,false];
+
+  function render(id, opts){
+    const el = document.getElementById(id);
+    if (!el) return;
+    const W = el.clientWidth || 880;
+    const H = 240;
+    const compact = W < 700;
+    const mL = compact ? 46 : 56;
+    const mR = opts.rightMax ? (compact ? 42 : 50) : 14;
+    const mT = 22, mB = 30;
+    const PW = W - mL - mR, PH = H - mT - mB;
+    const n = opts.labels.length;
+    const slot = PW / n;
+    const xPos = i => mL + slot*i + slot/2;
+    const yPos = (v, max) => mT + PH - (v/max) * PH;
+
+    let s = '<svg viewBox="0 0 '+W+' '+H+'" font-family="inherit">';
+
+    // Gridlines (4 lines)
+    for (let g=0; g<=4; g++){
+      const y = mT + PH * g/4;
+      s += '<line x1="'+mL+'" y1="'+y+'" x2="'+(W-mR)+'" y2="'+y+'" stroke="#eef0f3" stroke-width="1"/>';
+    }
+    // Left Y labels
+    if (opts.leftFmt){
+      for (let g=0; g<=4; g++){
+        const y = mT + PH * g/4;
+        const v = opts.leftMax * (1 - g/4);
+        s += '<text x="'+(mL-7)+'" y="'+(y+3.5)+'" text-anchor="end" font-size="10" fill="#8b929a">'+opts.leftFmt(v)+'</text>';
+      }
+    }
+    // Right Y labels
+    if (opts.rightMax && opts.rightFmt){
+      for (let g=0; g<=4; g++){
+        const y = mT + PH * g/4;
+        const v = opts.rightMax * (1 - g/4);
+        s += '<text x="'+(W-mR+7)+'" y="'+(y+3.5)+'" text-anchor="start" font-size="10" fill="#8b929a">'+opts.rightFmt(v)+'</text>';
+      }
+    }
+    // X labels
+    const showEvery = Math.ceil(n / (compact ? 8 : 16));
+    opts.labels.forEach((l, i) => {
+      if (i % showEvery !== 0) return;
+      s += '<text x="'+xPos(i)+'" y="'+(H-mB+15)+'" text-anchor="middle" font-size="9.5" fill="#8b929a">'+l+'</text>';
+    });
+
+    // Bars
+    if (opts.bars){
+      opts.bars.forEach(b => {
+        const bw = slot * 0.62;
+        b.data.forEach((v, i) => {
+          const useSat = b.sat && b.sat[i];
+          const color = useSat ? '#e37400' : b.color;
+          const bx = xPos(i) - bw/2;
+          const by = yPos(v, opts.leftMax);
+          const bh = (mT+PH) - by;
+          s += '<rect x="'+bx+'" y="'+by+'" width="'+bw+'" height="'+bh+'" fill="'+color+'" opacity="0.85" rx="1.5">';
+          s += '<title>'+fullDate[i]+'  '+b.label+': '+opts.valFmt(v)+'</title>';
+          s += '</rect>';
+        });
+      });
+    }
+
+    // Lines
+    if (opts.lines){
+      opts.lines.forEach(L => {
+        const max = L.axis === 'right' ? opts.rightMax : opts.leftMax;
+        const pts = L.data.map((v, i) => [xPos(i), yPos(v, max)]);
+        const d = 'M ' + pts.map(p => p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L ');
+        s += '<path d="'+d+'" fill="none" stroke="'+L.color+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+        pts.forEach((p, i) => {
+          s += '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="2.5" fill="'+L.color+'">';
+          s += '<title>'+fullDate[i]+'  '+L.label+': '+opts.valFmt(L.data[i])+'</title>';
+          s += '</circle>';
+        });
+      });
+    }
+
+    s += '</svg>';
+    el.innerHTML = s;
+  }
+
+  // Chart 1: 每日支出 + WA 消息量
+  render('mainChart', {
+    labels,
+    bars: [{data: cost, color: '#1a73e8', sat: isSat, label: '支出'}],
+    lines: [{data: msg, color: '#e37400', axis: 'right', label: 'WA消息量'}],
+    leftMax: 2000, leftFmt: v => '$'+v,
+    rightMax: 50000, rightFmt: v => (v/1000)+'k',
+    valFmt: v => '$'+v.toLocaleString(undefined,{maximumFractionDigits:2})
+  });
+
+  // Chart 2: 通知单条成本
+  render('unitChart', {
+    labels,
+    lines: [{data: unit, color: '#d93025', label: '单条成本'}],
+    leftMax: 0.0175, leftFmt: v => '$'+v.toFixed(4),
+    valFmt: v => '$'+v.toFixed(5)
+  });
+
+  // Chart 3: 通知量 + 呼入量 + MM Lite
+  render('inboundChart', {
+    labels,
+    lines: [
+      {data: notify, color: '#1a73e8', label: '通知量'},
+      {data: inbound, color: '#1e8e3e', axis: 'right', label: '呼入量'},
+      {data: mmlite, color: '#9334e6', axis: 'right', label: 'MM Lite'}
+    ],
+    leftMax: 160000, leftFmt: v => (v/1000)+'k',
+    rightMax: 50000, rightFmt: v => (v/1000)+'k',
+    valFmt: v => v.toLocaleString()
+  });
+})();
+</script>
+</body>
+</html>
